@@ -1,0 +1,26 @@
+.DS_Store
+
+# Loose source images at repo root
+/*.png
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Local app bundles and build output
+build/
+DerivedData/
+
+# Xcode user state
+*.xcuserdata/
+xcuserdata/
+*.xcuserstate
+
+# .NET / Windows
+bin/
+obj/
+.vs/
+
+# macOS logs and temporary files
+*.log
+*.tmp

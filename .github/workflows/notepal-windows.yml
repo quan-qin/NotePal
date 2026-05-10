@@ -1,0 +1,41 @@
+name: Build NotePal Windows
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "NotePal/Windows/**"
+      - "NotePal/Scripts/publish_windows.ps1"
+      - ".github/workflows/notepal-windows.yml"
+  pull_request:
+    paths:
+      - "NotePal/Windows/**"
+      - "NotePal/Scripts/publish_windows.ps1"
+      - ".github/workflows/notepal-windows.yml"
+
+jobs:
+  publish-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build
+        run: dotnet build NotePal\Windows\NotePal.Windows\NotePal.Windows.csproj -c Release
+
+      - name: Publish portable exe
+        shell: pwsh
+        run: .\NotePal\Scripts\publish_windows.ps1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NotePal-win-x64
+          path: NotePal\build\windows\NotePal-win-x64
+          if-no-files-found: error
