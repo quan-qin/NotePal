@@ -8,6 +8,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
+using Brush = System.Windows.Media.Brush;
+using Button = System.Windows.Controls.Button;
 
 namespace NotePalWindows.Windows;
 

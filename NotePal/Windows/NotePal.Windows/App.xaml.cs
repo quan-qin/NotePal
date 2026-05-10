@@ -4,6 +4,7 @@ using NotePalWindows.Windows;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
+using Application = System.Windows.Application;
 
 namespace NotePalWindows;
 
