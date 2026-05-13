@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-beta.2 - 2026-05-13
+
+- Updated the Professor Tao companion image with a transparent-background asset.
+
 ## 0.1.0-beta.1 - 2026-05-13
 
 - First public macOS beta release.
