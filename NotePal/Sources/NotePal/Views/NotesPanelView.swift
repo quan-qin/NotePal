@@ -67,7 +67,7 @@ struct NotesPanelView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .help("切换文本记录和随笔画记")
+                .help("切换随笔和画记")
             }
         }
         .padding(14)
@@ -262,9 +262,9 @@ private extension NoteRecordMode {
     var emptyStateText: String {
         switch self {
         case .text:
-            return "还没有文本记录。"
+            return "还没有随笔。"
         case .drawing:
-            return "还没有随笔画记。"
+            return "还没有画记。"
         }
     }
 }

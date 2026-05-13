@@ -11,9 +11,9 @@ enum NoteRecordMode: String, CaseIterable, Identifiable, Codable {
     var displayName: String {
         switch self {
         case .text:
-            return "文本记录"
+            return "随笔"
         case .drawing:
-            return "随笔画记"
+            return "画记"
         }
     }
 
@@ -22,9 +22,9 @@ enum NoteRecordMode: String, CaseIterable, Identifiable, Codable {
         let rawValue = try container.decode(String.self)
 
         switch rawValue {
-        case Self.text.rawValue, "文本记录":
+        case Self.text.rawValue, "文本记录", "随笔":
             self = .text
-        case Self.drawing.rawValue, "随笔画记":
+        case Self.drawing.rawValue, "随笔画记", "画记":
             self = .drawing
         default:
             self = .text
