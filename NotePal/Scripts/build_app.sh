@@ -5,7 +5,12 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CONFIGURATION="${CONFIGURATION:-release}"
 APP_NAME="NotePal"
 TARGET_NAME="NotePal"
+APP_BUNDLE_IDENTIFIER="${APP_BUNDLE_IDENTIFIER:-com.notepal.app}"
+APP_VERSION="${APP_VERSION:-0.1.0-beta.1}"
+BUILD_NUMBER="${BUILD_NUMBER:-1}"
+ARCH_NAME="${ARCH_NAME:-$(uname -m)}"
 APP_DIR="$ROOT_DIR/build/$APP_NAME.app"
+ZIP_PATH="$ROOT_DIR/build/$APP_NAME-mac-$ARCH_NAME.zip"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
@@ -57,15 +62,17 @@ do
 done
 
 if [[ -n "$RESOURCE_BUNDLE" ]]; then
-  cp -R "$RESOURCE_BUNDLE" "$APP_DIR/$(basename "$RESOURCE_BUNDLE")"
-  cp -R "$RESOURCE_BUNDLE" "$RESOURCES_DIR/$(basename "$RESOURCE_BUNDLE")"
+  RESOURCE_BUNDLE_NAME="$(basename "$RESOURCE_BUNDLE")"
+  cp -R "$RESOURCE_BUNDLE" "$RESOURCES_DIR/$RESOURCE_BUNDLE_NAME"
 fi
+
+find "$APP_DIR" -mindepth 1 -maxdepth 1 -type d -name "*.bundle" -prune -exec rm -rf {} +
 
 if [[ -f "$APP_ICON" ]]; then
   cp "$APP_ICON" "$RESOURCES_DIR/NotePal.icns"
 fi
 
-cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
+cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -79,7 +86,7 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
     <key>CFBundleIconFile</key>
     <string>NotePal</string>
     <key>CFBundleIdentifier</key>
-    <string>app.notepal.local</string>
+    <string>$APP_BUNDLE_IDENTIFIER</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -87,9 +94,9 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.0</string>
+    <string>$APP_VERSION</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>$BUILD_NUMBER</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.productivity</string>
     <key>LSMinimumSystemVersion</key>
@@ -102,4 +109,21 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
+if command -v xattr >/dev/null; then
+  xattr -cr "$APP_DIR" 2>/dev/null || true
+fi
+
+codesign --force --deep --sign - "$APP_DIR"
+codesign --verify --deep --strict --verbose=2 "$APP_DIR"
+
+if command -v xattr >/dev/null; then
+  xattr -cr "$APP_DIR" 2>/dev/null || true
+fi
+
+codesign --verify --deep --strict --verbose=2 "$APP_DIR"
+
+rm -f "$ZIP_PATH"
+ditto -c -k --norsrc --keepParent "$APP_DIR" "$ZIP_PATH"
+
 echo "Built $APP_DIR"
+echo "Packaged $ZIP_PATH"

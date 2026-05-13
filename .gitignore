@@ -16,11 +16,6 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 
-# .NET / Windows
-bin/
-obj/
-.vs/
-
 # macOS logs and temporary files
 *.log
 *.tmp

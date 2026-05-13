@@ -1,8 +1,7 @@
 import Foundation
-import Security
 
 enum PetThemeCredentialStore {
-    private static let service = "app.notepal.theme-key"
+    private static let keyPrefix = "themeKey."
 
     static func savedKey(for theme: PetTheme) -> String? {
         guard theme.isSpecial else {
@@ -10,16 +9,7 @@ enum PetThemeCredentialStore {
         }
 
         for accountID in theme.storedIDs {
-            var query = baseQuery(accountID: accountID)
-            query[kSecReturnData as String] = true
-            query[kSecMatchLimit as String] = kSecMatchLimitOne
-
-            var item: CFTypeRef?
-            let status = SecItemCopyMatching(query as CFDictionary, &item)
-
-            if status == errSecSuccess,
-               let data = item as? Data,
-               let key = String(data: data, encoding: .utf8),
+            if let key = UserDefaults.standard.string(forKey: storageKey(accountID: accountID)),
                !key.isEmpty {
                 return key
             }
@@ -42,35 +32,22 @@ enum PetThemeCredentialStore {
             throw PetThemeCredentialError.emptyKey
         }
 
-        let keyData = Data(key.utf8)
-        var query = baseQuery(accountID: theme.rawValue)
-        SecItemDelete(query as CFDictionary)
-
-        query[kSecValueData as String] = keyData
-        query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-
-        let status = SecItemAdd(query as CFDictionary, nil)
-        guard status == errSecSuccess else {
-            throw PetThemeCredentialError.keychainFailure(status)
+        for accountID in theme.storedIDs {
+            UserDefaults.standard.set(key, forKey: storageKey(accountID: accountID))
         }
     }
 
     static func deleteKey(for theme: PetTheme) {
         for accountID in theme.storedIDs {
-            SecItemDelete(baseQuery(accountID: accountID) as CFDictionary)
+            UserDefaults.standard.removeObject(forKey: storageKey(accountID: accountID))
         }
     }
 
-    private static func baseQuery(accountID: String) -> [String: Any] {
-        [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: accountID
-        ]
+    private static func storageKey(accountID: String) -> String {
+        "\(keyPrefix)\(accountID)"
     }
 }
 
 enum PetThemeCredentialError: Error {
     case emptyKey
-    case keychainFailure(OSStatus)
 }

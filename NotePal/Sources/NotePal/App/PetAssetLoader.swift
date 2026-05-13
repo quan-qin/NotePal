@@ -9,7 +9,7 @@ enum PetAssetLoader {
         for theme in PetTheme.allCases where !theme.isSpecial {
             guard
                 let resourceName = theme.publicResourceName,
-                let url = Bundle.module.url(forResource: resourceName, withExtension: "png"),
+                let url = AppResourceBundle.url(forResource: resourceName, withExtension: "png"),
                 let image = NSImage(contentsOf: url),
                 image.isValid
             else {
@@ -78,7 +78,7 @@ enum PetAssetLoader {
     private static func encryptedData(for theme: PetTheme) -> Data? {
         guard
             let resourceName = theme.encryptedResourceName,
-            let url = Bundle.module.url(
+            let url = AppResourceBundle.url(
                 forResource: resourceName,
                 withExtension: EncryptedThemeAsset.fileExtension
             )

@@ -1,32 +1,35 @@
 # NotePal
 
-NotePal is a lightweight desktop companion for quick notes, todos, wellness reminders, and gentle on-screen prompts. It stays close at hand without requiring an account, cloud sync, or a background service outside the app.
-
-The repository includes a macOS app and a Windows WPF client. The Windows build is published as a portable, self-contained `NotePal.exe` for Windows 10+ x64.
+NotePal is a lightweight macOS desktop companion for quick notes, todos, wellness reminders, and gentle on-screen prompts. It stays close at hand without requiring an account, cloud sync, telemetry, or a background service outside the app.
 
 ## Features
 
 - Floating desktop companion with click-to-open notes, todos, and wellness controls.
-- Local notes and todos with reminder bubbles for due items.
+- Separate text notes and sketch notes, with local image paste support for text notes.
+- Local todos with reminder bubbles for due items.
 - Independent wellness reminders that do not mix with the todo list.
 - Built-in companion themes plus optional locked themes.
-- Theme menu, quiet mode for casual chatter, animation toggle, and tray/menu controls.
-- Local JSON persistence only; no telemetry, accounts, or network access.
-- Windows portable single-file publish target for `win-x64`.
+- Theme menu, quiet mode for casual chatter, animation toggle, and menu controls.
+- Local JSON persistence only.
 
-## Downloading Windows Builds
+## Download
 
-Windows builds are produced by GitHub Actions. Open the latest successful **Build NotePal Windows** workflow run and download the `NotePal-win-x64` artifact. The artifact contains:
+Open the latest GitHub Release and download:
 
 ```text
-NotePal.exe
+NotePal-mac-arm64.zip
 ```
 
-The executable is unsigned and portable. Windows may show a first-run warning because code signing is not part of this project yet.
+Unzip it and move `NotePal.app` to `/Applications`.
+
+This beta build is ad-hoc signed and not notarized with Apple. On first launch, macOS may block the app. If you trust this build, open it from Finder with Control-click, choose Open, then confirm Open.
+
+## System Requirements
+
+- macOS 13 or newer
+- Apple Silicon Mac for the published `arm64` build
 
 ## Build From Source
-
-### macOS
 
 Build and run the Swift package:
 
@@ -43,56 +46,28 @@ cd NotePal
 Scripts/build_app.sh
 ```
 
-The bundle is written to:
+The bundle and zip are written to:
 
 ```text
 NotePal/build/NotePal.app
-```
-
-### Windows
-
-Build the WPF client from Windows with the .NET 8 SDK:
-
-```powershell
-dotnet build NotePal\Windows\NotePal.Windows\NotePal.Windows.csproj -c Release
-```
-
-Publish the portable self-contained executable:
-
-```powershell
-NotePal\Scripts\publish_windows.ps1
-```
-
-The published executable is written to:
-
-```text
-NotePal\build\windows\NotePal-win-x64\NotePal.exe
+NotePal/build/NotePal-mac-arm64.zip
 ```
 
 ## Local Data
 
-NotePal stores user data on the local machine.
-
-macOS:
+NotePal stores user data locally:
 
 ```text
 ~/Library/Application Support/NotePal/notepal-data.json
 ```
 
-Windows:
-
-```text
-%APPDATA%\NotePal\
-```
-
-On first launch, NotePal also attempts to import compatible legacy local data so existing notes and todos can carry forward into the renamed app.
+On first launch, NotePal attempts to import compatible legacy local data so existing notes and todos can carry forward into the renamed app.
 
 ## Repository Layout
 
 ```text
 NotePal/
-  Sources/NotePal/              macOS Swift app
-  Windows/NotePal.Windows/      Windows WPF app
-  Scripts/                      local build and publishing scripts
-.github/workflows/              GitHub Actions release workflow
+  Sources/NotePal/      macOS Swift app
+  Scripts/              local build and asset utility scripts
+.github/workflows/      GitHub Actions release workflow
 ```

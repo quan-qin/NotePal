@@ -184,7 +184,7 @@ final class NotePalAppDelegate: NSObject, NSApplicationDelegate {
 
     private func configureApplicationIcon() {
         guard
-            let url = Bundle.module.url(forResource: "NotePalLogo", withExtension: "png"),
+            let url = AppResourceBundle.url(forResource: "NotePalLogo", withExtension: "png"),
             let image = NSImage(contentsOf: url)
         else {
             return
@@ -292,7 +292,9 @@ final class NotePalAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showGreeting() {
-        showMentorDialogue(mentorDialogueManager.randomPhrase())
+        if let phrase = mentorDialogueManager.randomPhrase() {
+            showMentorDialogue(phrase)
+        }
     }
 
     private func showMentorDialogue(_ phrase: String) {

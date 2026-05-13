@@ -20,23 +20,32 @@ final class LocalDataStore: @unchecked Sendable {
             in: .userDomainMask
         ).first ?? fileManager.homeDirectoryForCurrentUser
 
+        let bundleIdentifier = Bundle.main.bundleIdentifier ?? "app.notepal.local"
+        let usesDefaultLocalStorage = bundleIdentifier == "app.notepal.local"
+        let dataDirectoryName = usesDefaultLocalStorage ? "NotePal" : bundleIdentifier
+
         self.dataURL = applicationSupport
-            .appendingPathComponent("NotePal", isDirectory: true)
+            .appendingPathComponent(dataDirectoryName, isDirectory: true)
             .appendingPathComponent("notepal-data.json", isDirectory: false)
-        self.legacyDataURLs = [
-            applicationSupport
-                .appendingPathComponent("NotePet", isDirectory: true)
-                .appendingPathComponent("notepet-data.json", isDirectory: false),
-            applicationSupport
-                .appendingPathComponent(Self.joined("NotePet-", "a", "t", "h"), isDirectory: true)
-                .appendingPathComponent("notepet-data.json", isDirectory: false),
-            applicationSupport
-                .appendingPathComponent("NotePet4xyz", isDirectory: true)
-                .appendingPathComponent("notepet4xyz-data.json", isDirectory: false),
-            applicationSupport
-                .appendingPathComponent(Self.joined("NotePet-", "z", "y", "z", "x"), isDirectory: true)
-                .appendingPathComponent(Self.joined("notepet-", "z", "y", "z", "x", "-data.json"), isDirectory: false)
-        ]
+
+        if usesDefaultLocalStorage {
+            self.legacyDataURLs = [
+                applicationSupport
+                    .appendingPathComponent("NotePet", isDirectory: true)
+                    .appendingPathComponent("notepet-data.json", isDirectory: false),
+                applicationSupport
+                    .appendingPathComponent(Self.joined("NotePet-", "a", "t", "h"), isDirectory: true)
+                    .appendingPathComponent("notepet-data.json", isDirectory: false),
+                applicationSupport
+                    .appendingPathComponent("NotePet4xyz", isDirectory: true)
+                    .appendingPathComponent("notepet4xyz-data.json", isDirectory: false),
+                applicationSupport
+                    .appendingPathComponent(Self.joined("NotePet-", "z", "y", "z", "x"), isDirectory: true)
+                    .appendingPathComponent(Self.joined("notepet-", "z", "y", "z", "x", "-data.json"), isDirectory: false)
+            ]
+        } else {
+            self.legacyDataURLs = []
+        }
 
         self.encoder = JSONEncoder()
         self.encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -64,7 +73,14 @@ final class LocalDataStore: @unchecked Sendable {
 
     private func loadUnlocked() throws -> NotePalData {
         if fileManager.fileExists(atPath: dataURL.path) {
-            return try loadData(from: dataURL)
+            let rawData = try Data(contentsOf: dataURL)
+            let data = try decodeData(rawData)
+
+            if !rawData.contains(#""recordMode""#.data(using: .utf8) ?? Data()) {
+                try saveUnlocked(data)
+            }
+
+            return data
         }
 
         if let migratedData = try loadMigratedLegacyData() {
@@ -77,6 +93,10 @@ final class LocalDataStore: @unchecked Sendable {
 
     private func loadData(from url: URL) throws -> NotePalData {
         let rawData = try Data(contentsOf: url)
+        return try decodeData(rawData)
+    }
+
+    private func decodeData(_ rawData: Data) throws -> NotePalData {
         guard !rawData.isEmpty else {
             return NotePalData()
         }

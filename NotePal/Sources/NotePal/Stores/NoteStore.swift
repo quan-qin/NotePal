@@ -24,9 +24,17 @@ final class NoteStore: ObservableObject {
         }
     }
 
+    func notes(for recordMode: NoteRecordMode) -> [Note] {
+        notes.filter { $0.recordMode == recordMode }
+    }
+
     @discardableResult
-    func createNote(title: String = "未命名笔记", body: String = "") -> Note {
-        let note = Note(title: title, body: body)
+    func createNote(
+        recordMode: NoteRecordMode = .text,
+        title: String = "未命名笔记",
+        body: String = ""
+    ) -> Note {
+        let note = Note(recordMode: recordMode, title: title, body: body)
 
         persist { data in
             data.notes.insert(note, at: 0)
@@ -40,7 +48,9 @@ final class NoteStore: ObservableObject {
         updated.updatedAt = Date()
 
         persist { data in
-            guard let index = data.notes.firstIndex(where: { $0.id == updated.id }) else {
+            guard let index = data.notes.firstIndex(where: {
+                $0.id == updated.id && $0.recordMode == updated.recordMode
+            }) else {
                 return
             }
 
@@ -48,9 +58,19 @@ final class NoteStore: ObservableObject {
         }
     }
 
-    func deleteNote(id: UUID) {
+    func deleteNote(id: UUID, recordMode: NoteRecordMode? = nil) {
         persist { data in
-            data.notes.removeAll { $0.id == id }
+            data.notes.removeAll { note in
+                guard note.id == id else {
+                    return false
+                }
+
+                guard let recordMode else {
+                    return true
+                }
+
+                return note.recordMode == recordMode
+            }
         }
     }
 

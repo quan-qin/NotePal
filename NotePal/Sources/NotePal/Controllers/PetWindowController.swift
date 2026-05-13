@@ -292,7 +292,7 @@ final class PetWindowController: NSWindowController {
     private func showUnlockStorageError() {
         let alert = NSAlert()
         alert.messageText = "无法保存 key"
-        alert.informativeText = "特殊形象已验证，但 key 无法写入钥匙串。请检查系统钥匙串权限后重试。"
+        alert.informativeText = "特殊形象已验证，但 key 无法保存。请重试。"
         alert.alertStyle = .warning
         alert.addButton(withTitle: "好")
         alert.runModal()

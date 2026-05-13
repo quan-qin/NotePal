@@ -5,8 +5,13 @@ import SwiftUI
 final class PanelWindowController: NSWindowController {
     private let panelState = PanelState()
     private let onVisibilityChanged: (Bool) -> Void
-    private let panelSize = NSSize(width: 414, height: 520)
+    private let panelSize = NSSize(
+        width: PanelState.defaultPanelSize.width,
+        height: PanelState.defaultPanelSize.height
+    )
     private let gap: CGFloat = 6
+    private var lastPetFrame: NSRect?
+    private var resizeStartFrame: NSRect?
 
     var isVisible: Bool {
         window?.isVisible == true
@@ -30,6 +35,7 @@ final class PanelWindowController: NSWindowController {
         super.init(window: window)
 
         configure(window)
+        configureResizeHandlers()
         window.onEscape = { [weak self] in
             self?.hide()
         }
@@ -57,6 +63,7 @@ final class PanelWindowController: NSWindowController {
             return
         }
 
+        lastPetFrame = petFrame
         positionWindow(relativeTo: petFrame)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -68,6 +75,7 @@ final class PanelWindowController: NSWindowController {
             return
         }
 
+        lastPetFrame = petFrame
         positionWindow(relativeTo: petFrame)
     }
 
@@ -90,6 +98,48 @@ final class PanelWindowController: NSWindowController {
         ]
     }
 
+    private func configureResizeHandlers() {
+        panelState.beginResize = { [weak self] in
+            self?.resizeStartFrame = self?.window?.frame
+        }
+
+        panelState.resize = { [weak self] translation in
+            self?.resizePanel(with: translation)
+        }
+
+        panelState.endResize = { [weak self] in
+            self?.resizeStartFrame = nil
+        }
+    }
+
+    private func resizePanel(with translation: CGSize) {
+        guard
+            let window,
+            let startFrame = resizeStartFrame ?? self.window?.frame
+        else {
+            return
+        }
+
+        let screen = NSScreen.screens.first { screen in
+            screen.frame.intersects(startFrame)
+        }?.visibleFrame ?? NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 900, height: 700)
+
+        let widthDelta = panelState.attachmentSide == .left ? translation.width : -translation.width
+        let maxWidth = panelState.attachmentSide == .left
+            ? screen.maxX - startFrame.minX - 12
+            : startFrame.maxX - screen.minX - 12
+        let maxHeight = screen.height - 24
+        let newWidth = min(max(PanelState.defaultPanelSize.width, startFrame.width + widthDelta), maxWidth)
+        let newHeight = min(max(PanelState.defaultPanelSize.height, startFrame.height + translation.height), maxHeight)
+        let newX = panelState.attachmentSide == .left ? startFrame.minX : startFrame.maxX - newWidth
+        let newY = max(screen.minY + 12, startFrame.maxY - newHeight)
+        let newFrame = NSRect(x: newX, y: newY, width: newWidth, height: newHeight)
+
+        panelState.panelSize = newFrame.size
+        updateTailCenterY(windowFrame: newFrame)
+        window.setFrame(newFrame, display: true)
+    }
+
     private func positionWindow(relativeTo petFrame: NSRect) {
         guard let window else {
             return
@@ -99,6 +149,17 @@ final class PanelWindowController: NSWindowController {
         panelState.attachmentSide = layout.side
         panelState.tailCenterY = layout.tailCenterY
         window.setFrameOrigin(layout.origin)
+    }
+
+    private func updateTailCenterY(windowFrame: NSRect) {
+        guard let lastPetFrame else {
+            return
+        }
+
+        panelState.tailCenterY = min(
+            max(lastPetFrame.midY - windowFrame.minY, 54),
+            windowFrame.height - 54
+        )
     }
 
     private func layout(
