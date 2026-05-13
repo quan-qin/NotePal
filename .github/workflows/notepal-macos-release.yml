@@ -39,5 +39,10 @@ jobs:
           gh release view "$TAG" >/dev/null 2>&1 || \
             gh release create "$TAG" \
               --title "NotePal ${TAG#v}" \
-              --notes-file CHANGELOG.md
+              --notes-file CHANGELOG.md \
+              --prerelease
+          gh release edit "$TAG" \
+            --title "NotePal ${TAG#v}" \
+            --notes-file CHANGELOG.md \
+            --prerelease
           gh release upload "$TAG" "$ZIP_PATH" --clobber
